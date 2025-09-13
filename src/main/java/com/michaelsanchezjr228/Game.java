@@ -54,5 +54,4 @@ public class Game {
     public int getAwayScore() {
         return awayScore;
     }
-
 }
