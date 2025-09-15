@@ -12,6 +12,12 @@ public class Calculations {
         return teams;
     }
 
+    public static ArrayList<Team> getRankedList(int week) {
+        ArrayList<Team> rankings = new ArrayList<>(teams.values());
+        rankings.sort((a, b) -> Integer.compare(b.getScore(week), a.getScore(week)));
+        return rankings;
+    }
+
     public static void resetGames() {
         games.clear();
     }
@@ -73,32 +79,42 @@ public class Calculations {
         for (Team team : teams.values()) {
             int score;
             double points = Data.getFBSTeams();
-            double opponentPoints = 0;
+            double winningPoints = 0;
+            double losingPoints = 0;
 
             if (team.getName().equals("FCS")) {
                 continue;
             }
             for (String won : team.getWonAgainst().keySet()) {
                 String location = team.getWonAgainst().get(won);
-                opponentPoints += teams.get(won).getScore(week);
+                winningPoints += .2 * teams.get(won).getScore(week);
                 if (location.equals("home")) {
-                    opponentPoints *= .9;
+                    winningPoints *= .97;
                 } else if (location.equals("away")) {
-                    opponentPoints *= 1.1;
+                    winningPoints *= 1.03;
                 }
-                points += opponentPoints;
             }
             for (String lost : team.getLostAgainst().keySet()) {
                 String location = team.getLostAgainst().get(lost);
-                opponentPoints += -1 * Data.getFBSTeams();
-                opponentPoints += .5 * teams.get(lost).getScore(week);
+                int basePenalty = -Data.getFBSTeams();
+                int opponentScore = teams.get(lost).getScore(week);
+                double scaling = 1 - (opponentScore / (findBestScore(week)));
+                double penalty = .1 * basePenalty * scaling;
+
                 if (location.equals("home")) {
-                    points *= .9;
+                    points *= 1.03;
                 } else if (location.equals("away")) {
-                    points *= 1.1;
+                    points *= .97;
                 }
-                points += opponentPoints;
+
+                losingPoints += penalty;
             }
+
+            if (losingPoints > 0) {
+                losingPoints = 0;
+            }
+
+            points += winningPoints + losingPoints;
             score = (int) (points);
             team.setScore(week, score);
         }
