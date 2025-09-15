@@ -1,14 +1,14 @@
 package com.michaelsanchezjr228;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class Calculations {
 
-    private static HashMap<String, Team> teams = new HashMap<>();
+    private static LinkedHashMap<String, Team> teams = new LinkedHashMap<>();
     private static ArrayList<Game> games = new ArrayList<>();
 
-    public static HashMap<String, Team> getTeams() {
+    public static LinkedHashMap<String, Team> getTeams() {
         return teams;
     }
 
@@ -17,13 +17,17 @@ public class Calculations {
     }
 
     public static void addTeams() {
+        Data.addGames(Data.getCurrentWeek());
         int index = 0;
-        while (teams.size() < Data.getFBSTeams() && index < games.size()) {
-            if (games.get(index).getHomeClass() == "fbs") {
+        while (teams.size() <= Data.getFBSTeams()) {
+            if (games.get(index).getHomeClass().equals("fbs")) {
                 teams.put(games.get(index).getHomeName(), new Team(games.get(index).getHomeName()));
             }
-            if (games.get(index).getAwayClass() == "fbs") {
+            if (games.get(index).getAwayClass().equals("fbs")) {
                 teams.put(games.get(index).getAwayName(), new Team(games.get(index).getAwayName()));
+            }
+            if (games.get(index).getHomeClass().equals("fcs") || games.get(index).getAwayClass().equals("fcs")) {
+                teams.put("FCS", new Team("FCS"));
             }
             index++;
         }
@@ -36,22 +40,67 @@ public class Calculations {
 
     public static void determineOutcomes(int week) {
         for (Game game : games) {
+            if (game.getWeek() != week) {
+                continue;
+            }
+            String homeLoc = "home";
+            String awayLoc = "away";
+            if (game.isNeutralSite()) {
+                homeLoc = "neutral";
+                awayLoc = "neutral";
+            }
             if (game.getHomeScore() > game.getAwayScore()) {
-                teams.get(game.getHomeName()).addWonAgainst(game.getAwayName());
-                teams.get(game.getAwayName()).addLostAgainst(game.getHomeName());
+                teams.get(game.getHomeName()).addWonAgainst(game.getAwayName(), homeLoc);
+                teams.get(game.getAwayName()).addLostAgainst(game.getHomeName(), awayLoc);
             } else if (game.getHomeScore() < game.getAwayScore()) {
-                teams.get(game.getAwayName()).addWonAgainst(game.getHomeName());
-                teams.get(game.getHomeName()).addLostAgainst(game.getAwayName());
+                teams.get(game.getAwayName()).addWonAgainst(game.getHomeName(), awayLoc);
+                teams.get(game.getHomeName()).addLostAgainst(game.getAwayName(), homeLoc);
             }
         }
     }
 
-    /*public static void calculateScores(int week) {
+    public static int findBestScore(int pre_week) {
+        int best = Integer.MIN_VALUE;
         for (Team team : teams.values()) {
-            int index = 0;
-            while (index < team.getWonAgainst().size()) {
-                int opponentScore = teams.get(team.getWonAgainst().get(index)).getScore(week);
+            if (team.getScore(pre_week) > best) {
+                best = team.getScore(pre_week);
             }
         }
-    }*/
+        return best;
+    }
+
+    public static void calculateScores(int week) {
+        for (Team team : teams.values()) {
+            int score;
+            double points = Data.getFBSTeams();
+            double opponentPoints = 0;
+
+            if (team.getName().equals("FCS")) {
+                continue;
+            }
+            for (String won : team.getWonAgainst().keySet()) {
+                String location = team.getWonAgainst().get(won);
+                opponentPoints += teams.get(won).getScore(week);
+                if (location.equals("home")) {
+                    opponentPoints *= .9;
+                } else if (location.equals("away")) {
+                    opponentPoints *= 1.1;
+                }
+                points += opponentPoints;
+            }
+            for (String lost : team.getLostAgainst().keySet()) {
+                String location = team.getLostAgainst().get(lost);
+                opponentPoints += -1 * Data.getFBSTeams();
+                opponentPoints += .5 * teams.get(lost).getScore(week);
+                if (location.equals("home")) {
+                    points *= .9;
+                } else if (location.equals("away")) {
+                    points *= 1.1;
+                }
+                points += opponentPoints;
+            }
+            score = (int) (points);
+            team.setScore(week, score);
+        }
+    }
 }

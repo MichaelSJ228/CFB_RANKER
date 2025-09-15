@@ -32,6 +32,9 @@ public class Game {
     }
 
     public String getHomeName() {
+        if (homeClass.equals("fcs")) {
+            return "FCS";
+        }
         return homeName;
     }
 
@@ -44,6 +47,9 @@ public class Game {
     }
 
     public String getAwayName() {
+        if (awayClass.equals("fcs")) {
+            return "FCS";
+        }
         return awayName;
     }
 

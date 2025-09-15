@@ -1,44 +1,54 @@
 package com.michaelsanchezjr228;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Team {
 
     final private String name;
-    private ArrayList<String> wonAgainst = new ArrayList<>();
-    private ArrayList<String> lostAgainst = new ArrayList<>();
+    private HashMap<String, String> wonAgainst = new HashMap<>();
+    private HashMap<String, String> lostAgainst = new HashMap<>();
     private ArrayList<Integer> score = new ArrayList<>();
 
     public Team(String name) {
         this.name = name;
-        this.score.set(0, Data.getFBSTeams());
+        for (int index = 0; index <= Data.getCurrentWeek() + 1; index++) {
+            if (name.equals("FCS")) {
+                this.score.add(0, Data.getFCSWins());
+                continue;
+            }
+            this.score.add(Data.getFBSTeams());
+        }
     }
 
     public String getName() {
         return name;
     }
 
-    public ArrayList<String> getWonAgainst() {
+    public HashMap<String, String> getWonAgainst() {
         return wonAgainst;
     }
 
-    public ArrayList<String> getLostAgainst() {
+    public HashMap<String, String> getLostAgainst() {
         return lostAgainst;
     }
 
     public int getScore(int pre_week) {
+        if (score.get(pre_week) < 0) {
+            return 0;
+        }
         return score.get(pre_week);
     }
 
-    public void addWonAgainst(String name) {
-        wonAgainst.add(name);
+    public void addWonAgainst(String name, String location) {
+        wonAgainst.put(name, location);
     }
 
-    public void addLostAgainst(String name) {
-        lostAgainst.add(name);
+    public void addLostAgainst(String name, String location) {
+        lostAgainst.put(name, location);
     }
 
-    public void addScore(int week, int points) {
-        score.set(week + 1, score.get(week + 1) + points);
+    public void setScore(int week, int points) {
+        score.set(week + 1, points);
     }
 }
